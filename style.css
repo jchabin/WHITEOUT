@@ -1,0 +1,17 @@
+* {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+body {
+	background: black;
+}
+#c {
+	position: fixed;
+	top: calc(50vh - 50%);
+	left: calc(50vw - 50%);
+	image-rendering: pixelated;
+}
+.limg {
+	display: none;
+}
