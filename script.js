@@ -3,10 +3,10 @@ const c = document.getElementById("c");
 const WIDTH  = c.width  = 160;
 const HEIGHT = c.height = 144;
 const MOUSESPEED = 0.005;
-const SNOW_Q = 20000;
+const SNOW_Q = 10000;
 const SNOW_DIST = 250;
 const WALKSPEED = 1;
-const FOV_DEPTH_CONST = 50;
+const FOV_DEPTH_CONST = 75;
 const FDELAY = 1000 / 24;
 
 const ctx = c.getContext("2d");
@@ -60,10 +60,39 @@ for(var i = 0; i < 500; i++) {
 			if(depth <= 0)
 				return;
 
+			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
+
 			ctx.drawImage(
 				IMGS.pillartest,
 				0,
-				Math.floor((player.ha - me.r + Math.PI * 2) % (Math.PI / 2) / (Math.PI / 8)) * 160,
+				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI / 2) / (Math.PI / 8)) * 160,
+				160,
+				160,
+				x - 160 / depth / 2,
+				y - 160 / depth / 2,
+				160 / depth,
+				160 / depth
+			);
+		}
+	});
+}
+
+for(var i = 0; i < 0; i++) {
+	WORLD.push({
+		x: Math.random() * 2000 - 1000,
+		y: Math.random() * 2000 - 1000,
+		r: Math.random() * Math.PI * 2,
+		getDepth: DEFAULT_GETDEPTH,
+		render: (me, x, y, depth) => {
+			if(depth <= 0)
+				return;
+
+			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
+
+			ctx.drawImage(
+				IMGS.car,
+				0,
+				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI * 2) / (Math.PI / 8)) * 160,
 				160,
 				160,
 				x - 160 / depth / 2,
@@ -123,11 +152,20 @@ for(var i = 0; i < SNOW_Q; i++) {
 			if(depth <= 0)
 				return;
 
-			let size = Math.min(4, Math.ceil(1 / depth));
+			// let size = Math.min(4, Math.ceil(1 / depth));
+      //
+			// ctx.fillStyle = "white";
+			// ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2 - me.z / depth), size, size);
 
-			ctx.fillStyle = "white";
-			ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2 - me.z / depth), size, size);
+      let size = Math.min(64, Math.ceil(32 / depth));
 
+      ctx.drawImage(
+  			IMGS.snowtex,
+  			Math.round(x - size / 2),
+  			Math.round(y - size / 2 - me.z / depth),
+        size,
+        size
+  		);
 		}
 	});
 }
@@ -153,7 +191,7 @@ WORLD.push({
 	y: 0,
   reload: 0,
 	getDepth: me => {
-		return 0.3;
+		return 0.5;
 	},
 	render: (me, x, y, depth) => {
     if(KEYS.reload && !me.reload) {
@@ -165,10 +203,30 @@ WORLD.push({
     }
 		bob.x = Math.max(-4, bob.x * 0.8);
 		bob.y = Math.max(-4, bob.y * 0.8);
-		console.log(bob);
 		ctx.drawImage(IMGS.shotgun, 0, Math.floor(me.reload) * 144, 160, 144, 4 + Math.round(bob.x), 4 + Math.round(bob.y), 160, 144);
-    // ctx.drawImage(IMGS.shotgun, 4 + Math.round(bob.x), 4 + Math.round(bob.y));
-		// ctx.drawImage(IMGS.shotgun, 4 + Math.round(bob.x), 4 + Math.round(bob.y));
+	}
+});
+
+WORLD.push({
+	x: 0,
+	y: 0,
+  shoot: 0,
+	getDepth: me => {
+		return 0.51;
+	},
+	render: (me, x, y, depth) => {
+    if(KEYS.click && !me.shoot) {
+      me.shoot = 1;
+      KEYS.click = 0;
+			bob.x += 16;
+			bob.y += 16;
+    } else if (me.shoot) {
+      me.shoot += 1;
+      me.shoot %= 13;
+    }
+		if(me.shoot == 0)
+			return;
+		ctx.drawImage(IMGS.gunshot, 0, (me.shoot - 1) * 144, 160, 144, 4 + Math.round(bob.x), 4 + Math.round(bob.y), 160, 144);
 	}
 });
 
@@ -215,6 +273,14 @@ window.onkeyup = e => {
 		KEYS.insp = 0;
   if(e.code == "KeyR")
 		KEYS.reload = 0;
+}
+
+window.onmousedown = e => {
+	KEYS.click = 1;
+}
+
+window.onmouseup = e => {
+	KEYS.click = 0;
 }
 
 document.onpointerlockchange = e => {
