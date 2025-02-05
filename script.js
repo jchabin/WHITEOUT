@@ -10,7 +10,12 @@ const FOV_DEPTH_CONST = 75;
 const FDELAY = 1000 / 24;
 
 const ctx = c.getContext("2d");
-ctx.imageSmoothingEnabled= false;
+ctx.mozImageSmoothingEnabled    = false;
+ctx.oImageSmoothingEnabled      = false;
+ctx.webkitImageSmoothingEnabled = false;
+ctx.msImageSmoothingEnabled     = false;
+ctx.imageSmoothingEnabled       = false;
+
 
 const player = {
 	x: 0,
@@ -152,20 +157,20 @@ for(var i = 0; i < SNOW_Q; i++) {
 			if(depth <= 0)
 				return;
 
-			// let size = Math.min(4, Math.ceil(1 / depth));
-      //
-			// ctx.fillStyle = "white";
-			// ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2 - me.z / depth), size, size);
+			let size = Math.min(4, Math.ceil(1 / depth));
 
-      let size = Math.min(64, Math.ceil(32 / depth));
+			ctx.fillStyle = "white";
+			ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2 - me.z / depth), size, size);
 
-      ctx.drawImage(
-  			IMGS.snowtex,
-  			Math.round(x - size / 2),
-  			Math.round(y - size / 2 - me.z / depth),
-        size,
-        size
-  		);
+      // let size = Math.min(64, Math.ceil(32 / depth));
+			//
+      // ctx.drawImage(
+  		// 	IMGS.snowtex,
+  		// 	Math.round(x - size / 2),
+  		// 	Math.round(y - size / 2 - me.z / depth),
+      //   size,
+      //   size
+  		// );
 		}
 	});
 }
