@@ -55,80 +55,206 @@ const DEFAULT_GETDEPTH = (me) => {
 	return depth;
 };
 
-for(var i = 0; i < 500; i++) {
-	WORLD.push({
-		x: Math.random() * 2000 - 1000,
-		y: Math.random() * 2000 - 1000,
-		r: Math.random() * Math.PI * 2,
-		getDepth: DEFAULT_GETDEPTH,
-		render: (me, x, y, depth) => {
-			if(depth <= 0)
-				return;
-
-			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
-
-			ctx.drawImage(
-				IMGS.pillartest,
-				0,
-				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI / 2) / (Math.PI / 8)) * 160,
-				160,
-				160,
-				x - 160 / depth / 2,
-				y - 160 / depth / 2,
-				160 / depth,
-				160 / depth
-			);
-		}
-	});
+const DEFAULT_COLLIDE = (dist) => (me) => {
+	let cdist = Math.hypot(me.x - player.x, me.y - player.y)
+	if(cdist < dist) {
+		player.x = me.x + (player.x - me.x) * (dist / cdist);
+		player.y = me.y + (player.y - me.y) * (dist / cdist);
+	}
 }
 
-for(var i = 0; i < 0; i++) {
-	WORLD.push({
-		x: Math.random() * 2000 - 1000,
-		y: Math.random() * 2000 - 1000,
-		r: Math.random() * Math.PI * 2,
-		getDepth: DEFAULT_GETDEPTH,
-		render: (me, x, y, depth) => {
-			if(depth <= 0)
-				return;
+let gdtext = document.getElementById("gamedata").innerHTML.trim();
+for(let line of gdtext.split("\n")) {
+	line = line.trim().split(",");
+	console.log(line);
+	switch(line[0]){
+		case "pillartest":
+			WORLD.push({
+					x: parseInt(line[1]),
+					y: parseInt(line[2]),
+					r: parseInt(line[3]) / 180 * Math.PI,
+					getDepth: DEFAULT_GETDEPTH,
+					collide: DEFAULT_COLLIDE(25),
+					render: (me, x, y, depth) => {
+						if(depth <= 0)
+							return;
 
-			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
+						let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST * 2, (x - WIDTH / 2) * depth);
+						// localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST * 2, (x - WIDTH / 2) * depth);
 
-			ctx.drawImage(
-				IMGS.car,
-				0,
-				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI * 2) / (Math.PI / 8)) * 160,
-				160,
-				160,
-				x - 160 / depth / 2,
-				y - 160 / depth / 2,
-				160 / depth,
-				160 / depth
-			);
-		}
-	});
+						console.log(Math.round((localAngle - me.r + Math.PI * 4) / (Math.PI / 8)) % 4)
+
+						ctx.drawImage(
+							IMGS.pillartest,
+							0,
+							Math.round((localAngle - me.r + Math.PI * 4) / (Math.PI / 8)) % 4 * 160,
+							160,
+							160,
+							x - 160 / depth / 2,
+							y - 160 / depth / 2,
+							160 / depth,
+							160 / depth
+						);
+					}
+				});
+			break;
+		case "car":
+			WORLD.push({
+					x: parseInt(line[1]),
+					y: parseInt(line[2]),
+					r: parseInt(line[3]) / 180 * Math.PI,
+					getDepth: DEFAULT_GETDEPTH,
+					collide: DEFAULT_COLLIDE(50),
+					render: (me, x, y, depth) => {
+						if(depth <= 0)
+							return;
+
+						let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST * 2, (x - WIDTH / 2) * depth);
+
+						ctx.drawImage(
+							IMGS.car,
+							0,
+							Math.round((localAngle - me.r + Math.PI * 4) / (Math.PI / 8)) % 16 * 160,
+							160,
+							160,
+							x - 160 / depth / 2,
+							y - 160 / depth / 2,
+							160 / depth,
+							160 / depth
+						);
+					}
+				});
+			break;
+		case "bigtower":
+			WORLD.push({
+					x: parseInt(line[1]),
+					y: parseInt(line[2]),
+					r: parseInt(line[3]) / 180 * Math.PI,
+					getDepth: DEFAULT_GETDEPTH,
+					collide: DEFAULT_COLLIDE(30),
+					render: (me, x, y, depth) => {
+						if(depth <= 0)
+							return;
+
+						let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST * 2, (x - WIDTH / 2) * depth);
+
+						ctx.drawImage(
+							IMGS.bigtower,
+							0,
+							Math.round((localAngle - me.r + Math.PI * 4) / (Math.PI / 8)) % 4 * 300,
+							80,
+							300,
+							x - 80 / depth / 2,
+							y - 220 / depth,
+							80 / depth,
+							300 / depth
+						);
+					}
+				});
+			break;
+		case "turbine":
+			WORLD.push({
+					x: parseInt(line[1]),
+					y: parseInt(line[2]),
+					frame: 0,
+					getDepth: DEFAULT_GETDEPTH,
+					collide: DEFAULT_COLLIDE(40),
+					render: (me, x, y, depth) => {
+						me.frame = (me.frame + 1) % 8;
+						if(depth <= 0)
+							return;
+
+						ctx.drawImage(
+							IMGS.turbine,
+							0,
+							Math.floor(me.frame / 2) * 600,
+							80,
+							600,
+							x - 80 / depth / 2,
+							y - 520 / depth,
+							80 / depth,
+							600 / depth
+						);
+					}
+				});
+			break;
+	}
 }
 
-for(var i = 0; i < 20; i++) {
-	WORLD.push({
-		x: Math.random() * 2000 - 1000,
-		y: Math.random() * 2000 - 1000,
-		r: Math.random() * Math.PI * 2,
-		getDepth: DEFAULT_GETDEPTH,
-		render: (me, x, y, depth) => {
-			if(depth <= 0)
-				return;
+// for(var i = 0; i < 500; i++) {
+// 	WORLD.push({
+// 		x: Math.random() * 2000 - 1000,
+// 		y: Math.random() * 2000 - 1000,
+// 		r: Math.random() * Math.PI * 2,
+// 		getDepth: DEFAULT_GETDEPTH,
+// 		render: (me, x, y, depth) => {
+// 			if(depth <= 0)
+// 				return;
+//
+// 			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
+//
+// 			ctx.drawImage(
+// 				IMGS.pillartest,
+// 				0,
+// 				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI / 2) / (Math.PI / 8)) * 160,
+// 				160,
+// 				160,
+// 				x - 160 / depth / 2,
+// 				y - 160 / depth / 2,
+// 				160 / depth,
+// 				160 / depth
+// 			);
+// 		}
+// 	});
+// }
 
-			ctx.drawImage(
-				IMGS.thingv1,
-        x - 160 / 2 / depth,
-				y - 160 / 2 / depth,
-				160 / depth,
-				160 / depth
-			);
-		}
-	});
-}
+// for(var i = 0; i < 10; i++) {
+// 	WORLD.push({
+// 		x: Math.random() * 2000 - 1000,
+// 		y: Math.random() * 2000 - 1000,
+// 		r: Math.random() * Math.PI * 2,
+// 		getDepth: DEFAULT_GETDEPTH,
+// 		render: (me, x, y, depth) => {
+// 			if(depth <= 0)
+// 				return;
+//
+// 			let localAngle = player.ha - Math.atan2(depth * FOV_DEPTH_CONST, (x - WIDTH / 2) * depth);
+//
+// 			ctx.drawImage(
+// 				IMGS.car,
+// 				0,
+// 				Math.floor((localAngle - me.r + Math.PI * 4) % (Math.PI * 2) / (Math.PI / 8)) * 160,
+// 				160,
+// 				160,
+// 				x - 160 / depth / 2,
+// 				y - 160 / depth / 2,
+// 				160 / depth,
+// 				160 / depth
+// 			);
+// 		}
+// 	});
+// }
+
+// for(var i = 0; i < 20; i++) {
+// 	WORLD.push({
+// 		x: Math.random() * 2000 - 1000,
+// 		y: Math.random() * 2000 - 1000,
+// 		r: Math.random() * Math.PI * 2,
+// 		getDepth: DEFAULT_GETDEPTH,
+// 		render: (me, x, y, depth) => {
+// 			if(depth <= 0)
+// 				return;
+//
+// 			ctx.drawImage(
+// 				IMGS.thingv1,
+//         x - 160 / 2 / depth,
+// 				y - 160 / 2 / depth,
+// 				160 / depth,
+// 				160 / depth
+// 			);
+// 		}
+// 	});
+// }
 
 for(var i = 0; i < SNOW_Q; i++) {
 	let r = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * SNOW_DIST;
@@ -154,7 +280,7 @@ for(var i = 0; i < SNOW_Q; i++) {
 			me.y += Math.random();
 			me.z -= 2;
 
-			if(depth <= 0)
+			if(depth <= 0.0)
 				return;
 
 			let size = Math.min(4, Math.ceil(1 / depth));
@@ -176,27 +302,11 @@ for(var i = 0; i < SNOW_Q; i++) {
 }
 
 WORLD.push({
-	x: 100000,
-	y: 80000,
-	getDepth: DEFAULT_GETDEPTH,
-	render: (me, x, y, depth) => {
-		if(depth <= 0)
-				return;
-
-		ctx.drawImage(
-			IMGS.distmountains,
-			Math.round(x - 100),
-			Math.round(y - 50)
-		);
-	}
-});
-
-WORLD.push({
 	x: 0,
 	y: 0,
   reload: 0,
 	getDepth: me => {
-		return 0.5;
+		return 0.2;
 	},
 	render: (me, x, y, depth) => {
     if(KEYS.reload && !me.reload) {
@@ -217,7 +327,7 @@ WORLD.push({
 	y: 0,
   shoot: 0,
 	getDepth: me => {
-		return 0.51;
+		return 0.21;
 	},
 	render: (me, x, y, depth) => {
     if(KEYS.click && !me.shoot) {
@@ -227,11 +337,11 @@ WORLD.push({
 			bob.y += 16;
     } else if (me.shoot) {
       me.shoot += 1;
-      me.shoot %= 13;
+      me.shoot %= 11;
     }
 		if(me.shoot == 0)
 			return;
-		ctx.drawImage(IMGS.gunshot, 0, (me.shoot - 1) * 144, 160, 144, 4 + Math.round(bob.x), 4 + Math.round(bob.y), 160, 144);
+		ctx.drawImage(IMGS.gunshot, 0, (me.shoot - 1) * 144, 160, 144, 4, 4, 160, 144);
 	}
 });
 
@@ -329,6 +439,12 @@ function render(ts) {
 
 		ctx.fillStyle = "white";
 		ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+		for(let obj of WORLD) {
+			if(obj.collide) {
+				obj.collide(obj);
+			}
+		}
 
 		for(let obj of WORLD) {
 			obj.depth = obj.getDepth(obj);

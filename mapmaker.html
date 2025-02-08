@@ -1,22 +1,120 @@
-<style></style>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .m {
+    position: absolute;
+    cursor: pointer;
+  }
+  #map{
+    width: 100%;
+    height: 100%;
+  }
+  #menu{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+</style>
+<div id="menu">
+<input id="r" value="0" onkeyup="changeR()"></input>
+<button onclick="imp()">Import</button>
+<button onclick="exp()">Export</button>
+</div>
 <div id="map"></div>
-<div id="menu"></div>
 
 <script>
   const TYPES = [
     "car",
-    "pillar",
+    "pillartest",
     "roadmarker",
-    "dangersign",
-    "rightsign",
-    "leftsign",
-    "antenna0",
-    "antenna1",
+    "bigtower",
+    "turbine",
     "antenna2",
     "antenna3",
     "flag",
     "fence0",
     "fence1",
     "tower"
-  ]
+  ];
+
+  var selected = 0;
+  var mapdata = [];
+  var zoom = 1;
+  var centerX = 0, centerY = 0;
+  var R = 0;
+
+  for(var i = 0; i < TYPES.length; i++) {
+    let li = i;
+    let b = document.createElement("BUTTON");
+    b.innerText = TYPES[i];
+    b.onclick = () => selected = li;
+    document.getElementById("menu").appendChild(b);
+  }
+
+  function imp() {
+    let text = prompt("?");
+    mapdata = [];
+    for(let line of text.trim().split("\n")) {
+      line = line.trim().split(",");
+      mapdata.push({
+        type: line[0].trim(),
+        x: parseInt(line[1].trim()),
+        y: parseInt(line[2].trim()),
+        r: parseInt((line[3] ?? "0").trim())
+      });
+    }
+    update();
+  }
+
+  function exp() {
+    let w = window.open();
+    w.document.write(mapdata.map(m => `${m.type},${m.x},${m.y},${m.r}`).join("<br/>"));
+  }
+
+  function changeR() {
+    R = parseInt(document.getElementById("r").value)
+    if(isNaN(R)) R = 0;
+    console.log(R);
+  }
+
+  function update() {
+    // requestAnimationFrame(update);
+
+    // terrible to remove all elems and replace each time
+    // whatever, its a dev tool and im on a time crunch
+    document.getElementById("map").innerHTML = "";
+
+    let d = document.createElement("DIV");
+    d.innerText = "spawn\n(facing down)";
+    d.style.left = window.innerWidth / 2 - centerX + "px";
+    d.style.top = window.innerHeight / 2 - centerY + "px";
+    d.className = "m";
+    document.getElementById("map").appendChild(d);
+
+    for(let m of mapdata) {
+      let mi = m;
+      let d = document.createElement("DIV");
+      d.innerText = m.type;
+      d.style.left = window.innerWidth / 2 + m.x / zoom - centerX + "px";
+      d.style.top = window.innerHeight / 2 + m.y / zoom - centerY + "px";
+      d.style.transform = `rotate(${m.r}deg)`;
+      d.className = "m";
+      d.onclick = e => {e.stopPropagation(); mapdata.splice(mapdata.indexOf(mi), 1); update()};
+      document.getElementById("map").appendChild(d);
+    }
+  }
+  update();
+
+  document.getElementById("map").onclick = e => {
+    mapdata.push({
+      type: TYPES[selected],
+      x: (e.clientX - window.innerWidth / 2) * zoom + centerX,
+      y: (e.clientY - window.innerHeight / 2) * zoom + centerY,
+      r: R
+    });
+    update();
+  }
 </script>
