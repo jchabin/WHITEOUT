@@ -404,6 +404,8 @@ document.onpointerlockchange = e => {
 
 var ls = 0;
 var lf = 0;
+var state = 0;
+var page = 0;
 function render(ts) {
 	requestAnimationFrame(render);
 
@@ -417,49 +419,70 @@ function render(ts) {
 	c.style.left = (window.innerWidth - nw) / 2 + "px";
 	c.style.top = (window.innerHeight - nw / WIDTH * HEIGHT) / 2 + "px";
 
-	if(KEYS.up) {
-		player.x += Math.sin(player.ha) * WALKSPEED * delta;
-		player.y += Math.cos(player.ha) * WALKSPEED * delta;
-	}
-	if(KEYS.left) {
-		player.x -= Math.cos(player.ha) * WALKSPEED * delta;
-		player.y += Math.sin(player.ha) * WALKSPEED * delta;
-	}
-	if(KEYS.right) {
-		player.x += Math.cos(player.ha) * WALKSPEED * delta;
-		player.y -= Math.sin(player.ha) * WALKSPEED * delta;
-	}
-	if(KEYS.down) {
-		player.x -= Math.sin(player.ha) * WALKSPEED * delta;
-		player.y -= Math.cos(player.ha) * WALKSPEED * delta;
-	}
+	if(state == 0){
+		ctx.drawImage(
+			IMGS.gametut,
+			0, page * HEIGHT,
+			WIDTH, HEIGHT,
+			0, 0,
+			WIDTH, HEIGHT
+		);
+		if(KEYS.left) {
+			KEYS.left = 0;
+			page = Math.max(0, page - 1);
+		}
+		if(KEYS.right) {
+			KEYS.right = 0;
+			page = Math.min(7, page + 1);
+		}
+		if(page == 7) {
+			setTimeout(() => state = 1, 1000);
+		}
+	}else if(state == 1){
+		if(KEYS.up) {
+			player.x += Math.sin(player.ha) * WALKSPEED * delta;
+			player.y += Math.cos(player.ha) * WALKSPEED * delta;
+		}
+		if(KEYS.left) {
+			player.x -= Math.cos(player.ha) * WALKSPEED * delta;
+			player.y += Math.sin(player.ha) * WALKSPEED * delta;
+		}
+		if(KEYS.right) {
+			player.x += Math.cos(player.ha) * WALKSPEED * delta;
+			player.y -= Math.sin(player.ha) * WALKSPEED * delta;
+		}
+		if(KEYS.down) {
+			player.x -= Math.sin(player.ha) * WALKSPEED * delta;
+			player.y -= Math.cos(player.ha) * WALKSPEED * delta;
+		}
 
-	if(lf >= FDELAY) {
-		lf %= FDELAY
+		if(lf >= FDELAY) {
+			lf %= FDELAY
 
-		ctx.fillStyle = "white";
-		ctx.fillRect(0, 0, WIDTH, HEIGHT);
+			ctx.fillStyle = "white";
+			ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-		for(let obj of WORLD) {
-			if(obj.collide) {
-				obj.collide(obj);
+			for(let obj of WORLD) {
+				if(obj.collide) {
+					obj.collide(obj);
+				}
 			}
-		}
 
-		for(let obj of WORLD) {
-			obj.depth = obj.getDepth(obj);
-		}
+			for(let obj of WORLD) {
+				obj.depth = obj.getDepth(obj);
+			}
 
-		WORLD.sort((a, b) => {
-			return b.depth - a.depth;
-		});
+			WORLD.sort((a, b) => {
+				return b.depth - a.depth;
+			});
 
-		for(let obj of WORLD) {
-			let rx = obj.x - player.x,
-			    ry = obj.y - player.y;
-			depth = obj.depth;
-			// obj.render(obj, WIDTH / 2 + rx / 2, HEIGHT / 2 + ry / 2, 2, player.ha);
-			obj.render(obj, WIDTH / 2 + (rx * Math.cos(player.ha) - ry * Math.sin(player.ha)) / depth, HEIGHT / 2 - player.va * 180 / Math.PI, depth);
+			for(let obj of WORLD) {
+				let rx = obj.x - player.x,
+				    ry = obj.y - player.y;
+				depth = obj.depth;
+				// obj.render(obj, WIDTH / 2 + rx / 2, HEIGHT / 2 + ry / 2, 2, player.ha);
+				obj.render(obj, WIDTH / 2 + (rx * Math.cos(player.ha) - ry * Math.sin(player.ha)) / depth, HEIGHT / 2 - player.va * 180 / Math.PI, depth);
+			}
 		}
 	}
 }
